@@ -1,103 +1,130 @@
 """
+
 Hangman game
-The user will know how long is the word, has to guess letters of the word
-and then gets three chances to guess the word.
-The game keeps playing until the user enters N to not continue playing.
+The program uses tkinter for the GUI.
+The user will know how long is the word, has to guess letters of the word (max 4 mistakes)
+and then gets 3 chances to guess the word. To play again, the user can press restart.
+
 """
 
 __author__ = "Veronica Lupinacci"
-__version__ = "6/29/2023"
+__version__ = "7/15/2023"
 
+from tkinter import *
 import random
 
-def only_char(x): #function to check if the input is a character only, part of the alphabet and change it to lowercase
+
+def play(): #part of the game used to guess a letter
+    global tries, lettersinput, guessed, rightcount, wrong #global values
+    global feedback_message
     
-    while x.isalpha() != True or len(x) > 1:
-        print ("Please enter only one character, it has to be a letter.")
-        x = input()
+    x = e.get() #get input
 
-    return x.lower()
+    
+    if len(x) > 1 or not x.isalpha(): #check if input is a letter
+        feedback_message.config(text="Please enter only one character, it has to be a letter.")
+        return
 
-continue_game = True # boolean to start or stop playing the game
+    feedback_message.config(text=" ")
+    x = x.lower() #change input to lowercase
+    lettersinput += x + " " #add input to lettersinput
+    e.delete(0, "end") #clear entry box
 
-while continue_game == True:
-    words = ["hello", "morning", "day", "toy", "night", "baby", "sun", "bedroom", "pencil", "happy"] #list of possible words
-    chosen = random.choice(words) #pick a random word
+    if x in chosen: #check if input is in the word, if yes then add to guessed 
+        feedback_message.config(text="You guessed right!\n")
+        guessed += x + " "
+    else: #if input not in the word, add to wrong and increment tries
+        feedback_message.config(text="Oh no! wrong guess.\n")
+        wrong += x + " "
+        tries += 1
 
-    guessed = "" #string for right letters
-    wrong = "" #string for wrong letters
-    wordsinput = "" #string for all letters already input
-    rightcount = 0 #counter for guessed letters
-    tries = 0 #counter for tries, counts only wrong entries
+    message2.config(text="Letters guessed so far: " + str(lettersinput) + "\nRight: " + str(guessed) + "   Wrong: " + str(wrong) + "\n") #tell user what tjhey got wrong and right
+
+    if tries > 4: #check if user got too many wrong
+        feedback_message.config(text="GAME OVER.\nToo many tries, the word was: " + chosen)
+    else:
+        e.focus_set() #ensure that the entry field is the active widget
+
+def guess_word(): #part of the game used to guess the word
+    global tries, letterswrong, wordsinput, guessed, rightcount, wrong #global values
+
+    x = e.get() #get input
+    wordsinput += x + " " #add input to wordsinput
+    e.delete(0, "end") #clear entry box
+
+    if x == chosen: #check if the word guessed is right
+        feedback_message.config(text="YOU WON!\nCongratulations, you guessed the word.") #tell the user they won
+    else:
+        feedback_message.config(text="Oh no! wrong guess.\n") #tell the user they guessed wrong
+        tries += 1 #increment tries
+        wrongwords += x + " " #add input to wrong
+
+        message2.config(text="Wrong words: " + str(wrongwords) + "Letters guessed so far: " + str(lettersinput) + "\nRight: " + str(guessed) + "   Wrong: " + str(wrong) + "\n")
+
+    if tries > 3: #check if user got too many wrong
+        feedback_message.config(text="GAME OVER.\nToo many tries, the word was: " + chosen)
+    else:
+        e.focus_set() #ensure that the entry field is the active widget
+
+def replay(): #to play the game again
+    global tries, lettersinput, letterswrong, guessed, wrong, chosen #global values
 
 
-    print("The word has", len(chosen), "letters") #tell the user how many characters has the word
+    chosen = random.choice(words)
+    guessed = ""
+    wrong = ""
+    letterswrong = ""
+    wordsinput = ""
+    tries = 0
+    lenChosen = str(len(chosen))
+
+    feedback_message.config(text="Guess a letter or the entire word.")
+    message1.config(text="The word has " + lenChosen + " letters")
+    message2.config(text="Letters guessed so far: " + str(lettersinput) + "\nRight: " + str(guessed) + "   Wrong: " + str(wrong) + "\n")
+    e.focus_set() #ensure that the entry field is the active widget
+    
+words = ["hello", "morning", "day", "toy", "night", "baby", "sun", "bedroom", "pencil", "happy"]
+chosen = random.choice(words)
+
+guessed = ""
+wrong = ""
+wrongwords = ""
+lettersinput = ""
+wordsinput = ""
+tries = 0
+lenChosen = str(len(chosen))
+
+root = Tk()
+root.geometry("300x250")
+root.title("Hangman game")
+
+welcome = Label(root, text="\n  Welcome to the hangman game!\n")
+welcome.grid(row=0, column=0, columnspan=2)
 
 
-    while rightcount < len(chosen) and tries <= 4 : #while loop until all letters in the word are guessed
-        print("Guess a letter") #get user input
-        x = input()
-        checked_input = only_char(x) #save in a new variable the result of the only_char function
+message1 = Label(root, text="The word has " + lenChosen + " letters")
+message1.grid(row=1, column=0, columnspan=2)
 
-        wordsinput = wordsinput + checked_input + " " #add word to input string
+feedback_message = Label(root, text="Guess a letter.")
+feedback_message.grid(row=2, column=0, columnspan=2)
 
-        if checked_input in chosen: #check if the user guessed right
-            print ("Good job! You guessed right.\n")
-            guessed += checked_input + " "#add word to guessed string
-            rightcount+=1 #increment counter
+e = Entry(root, width=20)
+e.grid(row=3, column=0, columnspan=2)
+e.focus_set()
 
-        else: #if the user is wrong
-            print ("Oh no! wrong guess.\n")
-            tries += 1 #increment tries counter
-            wrong += checked_input + " "#add word to wrong string
+enterButton = Button(root, state=NORMAL, text="Enter", command=play)
+enterButton.grid(row=4, column=0)
 
-        print ("Letters guessed so far:", wordsinput, "\nRight:", guessed, "   Wrong:", wrong, "\n") #output message to tell the user guessed, wrong and allinput letters
+message2 = Label(root, text="Letters guessed so far: " + str(wordsinput) + "\nRight: " + str(guessed) + "   Wrong: " + str(wrong) + "\n")
+message2.grid(row=5, column=0, columnspan=2)
 
-    if tries > 4 : #check if the while loop was exited because the user lost 
-        print("GAME OVER \nToo many tries, the word was:", chosen)
-    else: #else, continue the game
-        tries = 0 #reset tries counter
-        check = False #variable to check if the answer is right or wrong
+guessWordButton = Button(root, state=DISABLED, text = "Guess word")
+guessWordButton.grid(row=4, column=1)
 
-        #output message to tell the user that all words were guessed and what are those.
-        #Then tell the user to guess the full word
-        print ("All letters of the word are guessed! \nLetters:", guessed, "\n\nNow guess the word (NOTE the letters could appear more than once) : ")
-        x = input()
-            
-        while check == False and tries <= 3 : #start while lop
-            if x == chosen: #check if input equals to chosen word
-                check = True #set check variable to True
-                
-            else: #if guessed wrong, tell the user they lost
-                check = False
-                tries += 1 #increment tries counter
-                print ("Oh no! Guess again")
-                x = input()
-        #check if user won or lost
-        if check == True: 
-            print("YOU WON!")
-        else:
-            print("GAME OVER.\nToo many tries, the word was:", chosen)
+replayButton = Button(root, text="Restart", command=replay)
+replayButton.grid(row=6, column=0, columnspan=2)
 
-    ask = True #boolean for the loop to ask the user if they want to keep playing
-    print ("Do you want to play again? Y or N")
-    x = input().lower()
+root.mainloop()
 
-    #loop for the user to pick if quit or want to continue the game.
-    #It will keep going if the user doesn't enter Y or N.
-    while ask == True: 
-        if x == 'y' or x == 'n':
-            if x == 'y':
-                ask = False
-                continue_game = True
-            else:
-                ask = False
-                continue_game = False
-        else:
-            print ("Enter Y or N. Do you want to play again?")
-            x = input().lower()
 
-#end message
-print("The game end here. \nThank you for playing!")
 
-        
